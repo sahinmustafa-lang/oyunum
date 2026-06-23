@@ -38,7 +38,7 @@ public class GoalNet : MonoBehaviour
             float y = Mathf.Lerp(BOTTOM, TOP, (float)i / (H - 1));
             float alpha = Mathf.Lerp(0.28f, 0.50f, (float)i / (H - 1));
             var c = new Color(1f, 1f, 1f, alpha);
-            var go = MakeLine($"H{i}", new Vector3(0, y, 1f), RIGHT - LEFT + 0.1f, 0.022f, c, -9);
+            var go = MakeLine($"H{i}", new Vector3(0, y, 1f), RIGHT - LEFT + 0.1f, 0.022f, c, 2);
             hStrands[i] = go.transform;
             hOrigins[i] = go.transform.position;
         }
@@ -47,7 +47,7 @@ public class GoalNet : MonoBehaviour
         {
             float x = Mathf.Lerp(LEFT, RIGHT, (float)i / (V - 1));
             float midY = (BOTTOM + TOP) * 0.5f;
-            MakeLine($"V{i}", new Vector3(x, midY, 1f), 0.022f, TOP - BOTTOM, backColor, -10);
+            MakeLine($"V{i}", new Vector3(x, midY, 1f), 0.022f, TOP - BOTTOM, backColor, 1);
         }
     }
 

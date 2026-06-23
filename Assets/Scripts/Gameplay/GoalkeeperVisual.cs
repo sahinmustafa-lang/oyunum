@@ -27,7 +27,7 @@ public class GoalkeeperVisual : MonoBehaviour
     {
         root = new GameObject("GK_Root").transform;
         root.SetParent(transform, false);
-        root.localScale = Vector3.one * 1.1f;
+        root.localScale = Vector3.one * 1.28f;
 
         tHead   = P("GK_Head",   SKIN,   0.26f, 0.26f, sDisk, 8);
         tTorso  = P("GK_Torso",  JERSEY, 0.32f, 0.42f, sBox,  6);

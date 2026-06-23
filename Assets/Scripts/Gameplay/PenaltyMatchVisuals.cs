@@ -183,7 +183,7 @@ public class PenaltyMatchVisuals : MonoBehaviour
     void SetupBall()
     {
         var go = Ensure("Ball", new Vector3(0, -1.45f, 0));
-        go.transform.localScale = new Vector3(0.40f, 0.40f, 1f);
+        go.transform.localScale = new Vector3(0.34f, 0.34f, 1f);
         var sr = go.GetComponent<SpriteRenderer>() ?? go.AddComponent<SpriteRenderer>();
         sr.sprite = FootballSprite();
         sr.color  = Color.white;

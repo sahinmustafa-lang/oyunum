@@ -32,7 +32,7 @@ public class ShooterVisual : MonoBehaviour
     {
         root = new GameObject("SH_Root").transform;
         root.SetParent(transform, false);
-        root.localScale = Vector3.one * 1.4f;
+        root.localScale = Vector3.one * 1.6f;
 
         tHead   = P("SH_Head",   SKIN,   0.28f, 0.28f, sDisk, 13);
         tTorso  = P("SH_Torso",  JERSEY, 0.32f, 0.44f, sBox,  11);
