@@ -27,8 +27,8 @@ public class GoalNet : MonoBehaviour
 
     void BuildNet()
     {
-        var netColor = new Color(1f, 1f, 1f, 0.28f);
-        var backColor = new Color(1f, 1f, 1f, 0.12f);
+        var netColor = new Color(1f, 1f, 1f, 0.45f);
+        var backColor = new Color(1f, 1f, 1f, 0.20f);
 
         hStrands = new Transform[H];
         hOrigins = new Vector3[H];
@@ -36,7 +36,7 @@ public class GoalNet : MonoBehaviour
         for (int i = 0; i < H; i++)
         {
             float y = Mathf.Lerp(BOTTOM, TOP, (float)i / (H - 1));
-            float alpha = Mathf.Lerp(0.15f, 0.32f, (float)i / (H - 1));
+            float alpha = Mathf.Lerp(0.28f, 0.50f, (float)i / (H - 1));
             var c = new Color(1f, 1f, 1f, alpha);
             var go = MakeLine($"H{i}", new Vector3(0, y, 1f), RIGHT - LEFT + 0.1f, 0.022f, c, -9);
             hStrands[i] = go.transform;
@@ -70,8 +70,8 @@ public class GoalNet : MonoBehaviour
             for (int i = 0; i < hStrands.Length; i++)
             {
                 float phase  = i * 0.5f + elapsed * 9f;
-                float offset = Mathf.Sin(phase) * 0.09f * decay;
-                hStrands[i].position = hOrigins[i] + new Vector3(offset, Mathf.Sin(phase * 0.7f) * 0.04f * decay, 0);
+                float offset = Mathf.Sin(phase) * 0.18f * decay;
+                hStrands[i].position = hOrigins[i] + new Vector3(offset, Mathf.Sin(phase * 0.7f) * 0.08f * decay, 0);
             }
             yield return null;
         }
