@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 170323ee5a59f48aaadcb51c9ff16ea7, type: 3}
+  m_Name: TeamDatabase
+  m_EditorClassIdentifier: Assembly-CSharp::TeamDatabase
+  allTeams:
+  - {fileID: 11400000, guid: fb2547c66048e43bfb7f04815f6056e8, type: 2}
+  - {fileID: 11400000, guid: 215e9acad299249ebb2aff729f886b89, type: 2}
+  - {fileID: 11400000, guid: aa8fa22bace484b4cb2b85d0d95ab50a, type: 2}
+  - {fileID: 11400000, guid: 5bc293c8e36744e4a9c6506eec6a146f, type: 2}
+  - {fileID: 11400000, guid: f57888f39263d4cfaa86eb565cc07c32, type: 2}
+  - {fileID: 11400000, guid: d5cf0e51b76de4f339a699f98ae317ac, type: 2}
+  - {fileID: 11400000, guid: 741547b323d894e1d9f3ee82901e760e, type: 2}
+  - {fileID: 11400000, guid: e147cf3dcd5de4093b17f2486c6eed90, type: 2}
