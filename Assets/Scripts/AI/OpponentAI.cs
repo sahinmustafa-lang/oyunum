@@ -34,10 +34,12 @@ public static class OpponentAI
         shot.power         = Random.Range(0.65f, 0.95f);   // never max power (avoids any edge effects)
         shot.accuracy      = Mathf.Clamp01(strengthFactor + Random.Range(0f, 0.25f));
 
-        // Better AI targets corners more
-        if (strengthFactor + difficultyBonus > 0.6f && Random.value > 0.4f)
+        // Tüm 9 bölgeye eşit dağılım; güçlü takımlar biraz köşe tercih eder
+        float cornerBias = (strengthFactor + difficultyBonus - 0.5f) * 0.3f; // 0–0.15
+        if (Random.value < Mathf.Clamp01(cornerBias))
         {
-            ShotZone[] corners = { ShotZone.HighLeft, ShotZone.HighRight, ShotZone.LowLeft, ShotZone.LowRight };
+            ShotZone[] corners = { ShotZone.HighLeft, ShotZone.HighRight,
+                                   ShotZone.LowLeft,  ShotZone.LowRight };
             shot.targetZone = corners[Random.Range(0, corners.Length)];
         }
         else

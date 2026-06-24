@@ -162,7 +162,9 @@ public class GoalkeeperController : MonoBehaviour
     public void SetPlayerKeeperZone(ShotZone z) => playerZone = z;
     public ShotZone GetPlayerKeeperZone()        => playerZone;
 
-    // World positions for each zone (posts at ±2.6)
+    // Top Save olunca kalecinin gerçek pozisyonuna gitmesi için dışarıya aç
+    public static Vector3 GetDiveTarget(ShotZone zone) => ZoneToWorld(zone);
+
     static Vector3 ZoneToWorld(ShotZone zone)
     {
         // Root pozisyonu + 65° dönüş ≈ 0.55 birim ek uzanma.
