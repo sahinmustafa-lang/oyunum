@@ -34,26 +34,26 @@ public class ShooterVisual : MonoBehaviour
         root.SetParent(transform, false);
         root.localScale = Vector3.one * 1.6f;
 
-        tHair   = P("SH_Hair",   HAIR,    0.24f, 0.15f, sDisk,  14);
-        tHead   = P("SH_Head",   SKIN,    0.27f, 0.27f, sDisk,  13);
-        tTorso  = P("SH_Torso",  JERSEY,  0.30f, 0.42f, sRound, 11);
-        tStripe = P("SH_Stripe", JERSEY2, 0.08f, 0.28f, sBox,   12);
-        tShorts = P("SH_Shorts", SHORTS,  0.32f, 0.17f, sRound, 12);
+        tHair   = P("SH_Hair",   HAIR,    0.28f, 0.17f, sDisk,  14);
+        tHead   = P("SH_Head",   SKIN,    0.31f, 0.31f, sDisk,  13);
+        tTorso  = P("SH_Torso",  JERSEY,  0.36f, 0.42f, sRound, 11);
+        tStripe = P("SH_Stripe", JERSEY2, 0.10f, 0.28f, sBox,   12);
+        tShorts = P("SH_Shorts", SHORTS,  0.38f, 0.17f, sRound, 12);
 
-        tLArm   = P("SH_LArm",  JERSEY,  0.11f, 0.26f, sRound, 10);
-        tRArm   = P("SH_RArm",  JERSEY,  0.11f, 0.26f, sRound, 12);
-        tLHand  = P("SH_LHand", SKIN,    0.13f, 0.13f, sDisk,  10);
-        tRHand  = P("SH_RHand", SKIN,    0.13f, 0.13f, sDisk,  12);
+        tLArm   = P("SH_LArm",  JERSEY,  0.14f, 0.26f, sRound, 10);
+        tRArm   = P("SH_RArm",  JERSEY,  0.14f, 0.26f, sRound, 12);
+        tLHand  = P("SH_LHand", SKIN,    0.16f, 0.16f, sDisk,  10);
+        tRHand  = P("SH_RHand", SKIN,    0.16f, 0.16f, sDisk,  12);
 
-        tLThigh = P("SH_LThigh", SHORTS,  0.14f, 0.24f, sRound, 10);
-        tLCalf  = P("SH_LCalf",  SKIN,    0.11f, 0.20f, sRound, 10);
-        tLSock  = P("SH_LSock",  SOCK,    0.11f, 0.10f, sRound, 10);
-        tLBoot  = P("SH_LBoot",  BOOT,    0.16f, 0.09f, sRound, 10);
+        tLThigh = P("SH_LThigh", SHORTS,  0.17f, 0.24f, sRound, 10);
+        tLCalf  = P("SH_LCalf",  SKIN,    0.14f, 0.20f, sRound, 10);
+        tLSock  = P("SH_LSock",  SOCK,    0.13f, 0.10f, sRound, 10);
+        tLBoot  = P("SH_LBoot",  BOOT,    0.20f, 0.09f, sRound, 10);
 
-        tRThigh = P("SH_RThigh", SHORTS,  0.14f, 0.24f, sRound, 12);
-        tRCalf  = P("SH_RCalf",  SKIN,    0.11f, 0.20f, sRound, 12);
-        tRSock  = P("SH_RSock",  SOCK,    0.11f, 0.10f, sRound, 12);
-        tRBoot  = P("SH_RBoot",  BOOT,    0.16f, 0.09f, sRound, 12);
+        tRThigh = P("SH_RThigh", SHORTS,  0.17f, 0.24f, sRound, 12);
+        tRCalf  = P("SH_RCalf",  SKIN,    0.14f, 0.20f, sRound, 12);
+        tRSock  = P("SH_RSock",  SOCK,    0.13f, 0.10f, sRound, 12);
+        tRBoot  = P("SH_RBoot",  BOOT,    0.20f, 0.09f, sRound, 12);
 
         SetIdle();
     }

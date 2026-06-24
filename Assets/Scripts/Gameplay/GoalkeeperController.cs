@@ -94,7 +94,25 @@ public class GoalkeeperController : MonoBehaviour
     public void DiveTo(ShotZone zone)
     {
         StopAllCoroutines();
-        StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.28f));
+
+        bool isCorner = zone == ShotZone.LowLeft  || zone == ShotZone.LowRight ||
+                        zone == ShotZone.HighLeft  || zone == ShotZone.HighRight;
+
+        if (isCorner)
+            StartCoroutine(CornerDive(zone, 0.28f));
+        else
+        {
+            StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.28f));
+            visual?.DiveToZone(zone);
+        }
+    }
+
+    // Köşe dalışı: önce dizleri kır (0.13s), sonra kollar açık tam dalış
+    IEnumerator CornerDive(ShotZone zone, float dur)
+    {
+        visual?.SetCrouch();
+        yield return new WaitForSeconds(0.13f);
+        StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), dur));
         visual?.DiveToZone(zone);
     }
 
@@ -173,7 +191,7 @@ public class GoalkeeperController : MonoBehaviour
             case ShotZone.MidLeft:    return new Vector3(-2.2f, 1.43f, 0f);
             case ShotZone.HighLeft:   return new Vector3(-1.8f, 1.90f, 0f);
             case ShotZone.LowCenter:  return new Vector3( 0.0f, 0.95f, 0f);
-            case ShotZone.MidCenter:  return IDLE;
+            case ShotZone.MidCenter:  return new Vector3( 0.0f, 0.80f, 0f);  // öne adım
             case ShotZone.HighCenter: return new Vector3( 0.0f, 2.00f, 0f);
             case ShotZone.LowRight:   return new Vector3( 1.8f, 0.95f, 0f);
             case ShotZone.MidRight:   return new Vector3( 2.2f, 1.43f, 0f);
