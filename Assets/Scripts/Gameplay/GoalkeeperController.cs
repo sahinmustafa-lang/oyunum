@@ -8,8 +8,8 @@ public class GoalkeeperController : MonoBehaviour
 {
     public static GoalkeeperController Instance { get; private set; }
 
-    // Root y=1.60 → scale 1.28 × boot-center -0.51 = -0.653 → boot base ≈ y=0.88 (goal line)
-    static readonly Vector3 IDLE = new Vector3(0f, 1.60f, 0f);
+    // Root y=1.00 → gövde merkezi y≈1.28, kale ağzında görünür konum
+    static readonly Vector3 IDLE = new Vector3(0f, 1.00f, 0f);
 
     const float X_MIN = -3.0f, X_MAX = 3.0f;
     const float Y_MIN =  0.88f, Y_MAX = 2.30f;
@@ -187,15 +187,15 @@ public class GoalkeeperController : MonoBehaviour
     {
         switch (zone)
         {
-            case ShotZone.LowLeft:    return new Vector3(-1.8f, 0.95f, 0f);
-            case ShotZone.MidLeft:    return new Vector3(-2.2f, 1.43f, 0f);
-            case ShotZone.HighLeft:   return new Vector3(-1.8f, 1.90f, 0f);
-            case ShotZone.LowCenter:  return new Vector3( 0.0f, 0.95f, 0f);
-            case ShotZone.MidCenter:  return new Vector3( 0.0f, 0.80f, 0f);  // öne adım
-            case ShotZone.HighCenter: return new Vector3( 0.0f, 2.00f, 0f);
-            case ShotZone.LowRight:   return new Vector3( 1.8f, 0.95f, 0f);
-            case ShotZone.MidRight:   return new Vector3( 2.2f, 1.43f, 0f);
-            case ShotZone.HighRight:  return new Vector3( 1.8f, 1.90f, 0f);
+            case ShotZone.LowLeft:    return new Vector3(-1.8f, 0.60f, 0f);
+            case ShotZone.MidLeft:    return new Vector3(-2.2f, 1.00f, 0f);
+            case ShotZone.HighLeft:   return new Vector3(-1.8f, 1.80f, 0f);
+            case ShotZone.LowCenter:  return new Vector3( 0.0f, 0.65f, 0f);
+            case ShotZone.MidCenter:  return new Vector3( 0.0f, 0.80f, 0f);
+            case ShotZone.HighCenter: return new Vector3( 0.0f, 1.85f, 0f);
+            case ShotZone.LowRight:   return new Vector3( 1.8f, 0.60f, 0f);
+            case ShotZone.MidRight:   return new Vector3( 2.2f, 1.00f, 0f);
+            case ShotZone.HighRight:  return new Vector3( 1.8f, 1.80f, 0f);
             default:                  return IDLE;
         }
     }
