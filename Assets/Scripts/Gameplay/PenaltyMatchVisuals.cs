@@ -94,7 +94,9 @@ public class PenaltyMatchVisuals : MonoBehaviour
     IEnumerator LoadFieldGoalSprite()
     {
         yield return null;
-        var sr = LoadPhoto("Sprites/fieldgoal.png", "FieldGoalSprite");
+        // field_bg.png = ağ silinmiş; goal_net.png GoalNet.cs tarafından ayrıca yüklenir
+        var sr = LoadPhoto("Sprites/field_bg.png", "FieldGoalSprite");
+        if (sr == null) sr = LoadPhoto("Sprites/fieldgoal.png", "FieldGoalSprite");
         if (sr == null) yield break;
 
         // Saha alt (y=-5) → kiriş (y=3.22) arası: merkez=-0.89, yükseklik=8.22

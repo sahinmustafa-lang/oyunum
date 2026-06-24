@@ -1,25 +1,17 @@
 using UnityEngine;
 using System.Collections;
+using System.IO;
 
-// Kale ağı animasyonu — normalde görünmez, gol olunca belirir/sallanır/söner.
-// Böylece fotoğraftaki ağ sanki hareket ediyormuş izlenimi verir.
+// Fotoğraftaki gerçek ağı shader ile animasyonlar.
+// field_bg.png = ağsız arka plan, goal_net.png = sadece ağ (şeffaf PNG).
+// Gol olunca ağ UV dalgalanması tetiklenir, sonra söner.
 public class GoalNet : MonoBehaviour
 {
     public static GoalNet Instance { get; private set; }
 
-    const int   H      = 10;
-    const int   V      = 16;
-    const float LEFT   = -2.8f;
-    const float RIGHT  =  2.8f;
-    const float BOTTOM =  0.68f;
-    const float TOP    =  3.15f;
-
-    SpriteRenderer[] hRenderers;
-    SpriteRenderer[] vRenderers;
-    Transform[]      hStrands;
-    Vector3[]        hOrigins;
-    float[]          hBaseAlpha;
-    bool             swaying;
+    SpriteRenderer netRenderer;
+    Material       netMat;
+    bool           animating;
 
     void Awake()
     {
@@ -27,119 +19,93 @@ public class GoalNet : MonoBehaviour
         Instance = this;
     }
 
-    void Start() => BuildNet();
-
-    void BuildNet()
+    void Start()
     {
-        hStrands    = new Transform[H];
-        hOrigins    = new Vector3[H];
-        hRenderers  = new SpriteRenderer[H];
-        hBaseAlpha  = new float[H];
-        vRenderers  = new SpriteRenderer[V];
+        StartCoroutine(LoadNetSprite());
+    }
 
-        // Yatay şeritler — başlangıçta görünmez (alpha=0)
-        for (int i = 0; i < H; i++)
+    IEnumerator LoadNetSprite()
+    {
+        yield return null;
+
+        string path = Path.Combine(Application.streamingAssetsPath, "Sprites/goal_net.png");
+        if (!File.Exists(path)) { Debug.LogWarning("goal_net.png bulunamadı: " + path); yield break; }
+
+        byte[]    data   = File.ReadAllBytes(path);
+        Texture2D tex    = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        tex.filterMode   = FilterMode.Bilinear;
+        tex.LoadImage(data);
+
+        Sprite sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                                      new Vector2(0.5f, 0.5f), 100f);
+
+        var go = new GameObject("GoalNetSprite");
+        netRenderer = go.AddComponent<SpriteRenderer>();
+        netRenderer.sprite = sprite;
+
+        // field_bg ile aynı boyut ve konuma yerleştir
+        float natW = tex.width  / 100f;
+        float natH = tex.height / 100f;
+        float w = 20f, h = 8.22f, y = -0.89f;
+        go.transform.position   = new Vector3(0, y, 0);
+        go.transform.localScale = new Vector3(w / natW, h / natH, 1f);
+
+        // NetWave shader'ını ata
+        Shader shader = Shader.Find("Custom/NetWave");
+        if (shader != null)
         {
-            float y     = Mathf.Lerp(BOTTOM, TOP, (float)i / (H - 1));
-            float alpha = Mathf.Lerp(0.55f, 0.85f, (float)i / (H - 1));
-            hBaseAlpha[i] = alpha;
-            var go = MakeLine($"H{i}", new Vector3(0, y, 1f), RIGHT - LEFT + 0.1f, 0.020f,
-                              new Color(1f, 1f, 1f, 0f), 2);
-            hStrands[i]   = go.transform;
-            hOrigins[i]   = go.transform.position;
-            hRenderers[i] = go.GetComponent<SpriteRenderer>();
+            netMat = new Material(shader);
+            netMat.mainTexture    = tex;
+            netMat.SetFloat("_WaveAmp",   0.018f);
+            netMat.SetFloat("_WaveFreq",  7.0f);
+            netMat.SetFloat("_WaveSpeed", 4.0f);
+            netMat.SetFloat("_Intensity", 0f);
+            netRenderer.material  = netMat;
+        }
+        else
+        {
+            Debug.LogWarning("Custom/NetWave shader bulunamadı — default kullanılıyor");
         }
 
-        // Dikey şeritler — başlangıçta görünmez (alpha=0)
-        for (int i = 0; i < V; i++)
-        {
-            float x    = Mathf.Lerp(LEFT, RIGHT, (float)i / (V - 1));
-            float midY = (BOTTOM + TOP) * 0.5f;
-            var go = MakeLine($"V{i}", new Vector3(x, midY, 1f), 0.018f, TOP - BOTTOM,
-                              new Color(1f, 1f, 1f, 0f), 1);
-            vRenderers[i] = go.GetComponent<SpriteRenderer>();
-        }
+        netRenderer.sortingOrder = 2;
     }
 
     public void TriggerBallEntered()
     {
-        if (!swaying) StartCoroutine(SwayRoutine());
+        if (!animating && netMat != null)
+            StartCoroutine(WaveRoutine());
     }
 
-    IEnumerator SwayRoutine()
+    IEnumerator WaveRoutine()
     {
-        swaying = true;
+        animating = true;
 
-        // 1. Hızlıca belir (0.12 sn)
-        yield return FadeAll(0f, 1f, 0.12f);
+        // 0.12 sn'de yoğunluk 0 → 1
+        yield return AnimateIntensity(0f, 1f, 0.12f);
 
-        // 2. Salla (1.6 sn)
-        float elapsed = 0f, duration = 1.6f;
-        while (elapsed < duration)
+        // 1.6 sn boyunca yoğunluk azalır (top çarptıktan sonra ağ durur)
+        float elapsed = 0f, dur = 1.6f;
+        while (elapsed < dur)
         {
             elapsed += Time.deltaTime;
-            float t     = Mathf.Clamp01(elapsed / duration);
-            float decay = Mathf.Pow(1f - t, 1.4f);
-
-            for (int i = 0; i < hStrands.Length; i++)
-            {
-                float phase  = i * 0.6f + elapsed * 10f;
-                float ox     = Mathf.Sin(phase)       * 0.22f * decay;
-                float oy     = Mathf.Sin(phase * 0.7f) * 0.10f * decay;
-                hStrands[i].position = hOrigins[i] + new Vector3(ox, oy, 0);
-            }
+            float decay = Mathf.Pow(1f - Mathf.Clamp01(elapsed / dur), 1.5f);
+            netMat.SetFloat("_Intensity", decay);
             yield return null;
         }
 
-        // Şeritleri orijinal pozisyona döndür
-        for (int i = 0; i < hStrands.Length; i++)
-            hStrands[i].position = hOrigins[i];
-
-        // 3. Yavaşça söner (0.4 sn)
-        yield return FadeAll(1f, 0f, 0.40f);
-
-        swaying = false;
+        netMat.SetFloat("_Intensity", 0f);
+        animating = false;
     }
 
-    IEnumerator FadeAll(float fromT, float toT, float dur)
+    IEnumerator AnimateIntensity(float from, float to, float dur)
     {
         float e = 0f;
         while (e < dur)
         {
             e += Time.deltaTime;
-            float t = Mathf.Clamp01(e / dur);
-            float blend = Mathf.Lerp(fromT, toT, t);
-            for (int i = 0; i < hRenderers.Length; i++)
-            {
-                var c = hRenderers[i].color;
-                c.a = hBaseAlpha[i] * blend;
-                hRenderers[i].color = c;
-            }
-            float vAlpha = 0.35f * blend;
-            foreach (var sr in vRenderers)
-            {
-                var c = sr.color; c.a = vAlpha; sr.color = c;
-            }
+            netMat.SetFloat("_Intensity", Mathf.Lerp(from, to, e / dur));
             yield return null;
         }
-    }
-
-    static GameObject MakeLine(string n, Vector3 pos, float w, float h, Color c, int sort)
-    {
-        var go = new GameObject(n);
-        go.transform.position   = pos;
-        go.transform.localScale = new Vector3(w, h, 1f);
-        var sr = go.AddComponent<SpriteRenderer>();
-        sr.sprite       = MakeSprite(c);
-        sr.sortingOrder = sort;
-        return go;
-    }
-
-    static Sprite MakeSprite(Color c)
-    {
-        var tex = new Texture2D(2, 2);
-        tex.SetPixels(new[] { c, c, c, c });
-        tex.Apply();
-        return Sprite.Create(tex, new Rect(0, 0, 2, 2), new Vector2(0.5f, 0.5f), 2f);
+        netMat.SetFloat("_Intensity", to);
     }
 }
