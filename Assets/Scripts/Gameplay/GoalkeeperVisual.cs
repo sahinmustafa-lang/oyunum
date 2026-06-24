@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class GoalkeeperVisual : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class GoalkeeperVisual : MonoBehaviour
     Transform tLArm, tRArm, tLGlove, tRGlove;
     Transform tLLeg, tRLeg, tLSock, tRSock, tLBoot, tRBoot;
     SpriteRenderer srLA, srRA, srLG, srRG;
+
+    Coroutine idleSwayRoutine;
 
     static Sprite sBox, sDisk, sRound;
 
@@ -64,6 +67,7 @@ public class GoalkeeperVisual : MonoBehaviour
 
     public void DiveToZone(ShotZone zone)
     {
+        StopSway();
         switch (zone)
         {
             case ShotZone.LowLeft:
@@ -78,9 +82,40 @@ public class GoalkeeperVisual : MonoBehaviour
         }
     }
 
-    // Köşe dalışı için ön çömelme — controller'dan çağrılır
+    // Fake reaksiyonu: hafif yana yatma (tam dalış değil)
+    public void SetLean(bool right)
+    {
+        StopSway();
+        float s = right ? 1f : -1f;
+        root.localRotation = Quaternion.Euler(0, 0, -s * 14f);
+
+        Set(tHair,   0f,     0.64f,  0f);
+        Set(tHead,   0f,     0.55f,  s * 3f);
+        Set(tTorso,  0f,     0.22f,  s * 4f);
+        Set(tStripe, 0f,     0.22f,  s * 4f);
+        Set(tShorts, 0f,    -0.04f,  0f);
+        // Kollar hazır pozisyonda — biraz daha geniş
+        Set(tLArm,  -0.30f,  0.22f,  50f);
+        Set(tRArm,   0.30f,  0.22f, -50f);
+        Set(tLGlove,-0.24f,  0.07f,  0f);
+        Set(tRGlove, 0.24f,  0.07f,  0f);
+        // Diz hafif kırık, ağırlık lean tarafına kaymış
+        float inAng = s * 14f;   // ağırlıklı bacak biraz dışa
+        float outAng = -s * 3f;  // hafif bacak neredeyse düz
+        Set(tLLeg,  -0.11f, -0.25f, right ? outAng : inAng);
+        Set(tRLeg,   0.11f, -0.25f, right ? inAng  : outAng);
+        Set(tLSock, -0.11f, -0.40f, right ? outAng : inAng);
+        Set(tRSock,  0.11f, -0.40f, right ? inAng  : outAng);
+        Set(tLBoot, -0.13f, -0.49f,  0f);
+        Set(tRBoot,  0.13f, -0.49f,  0f);
+        srLA.sortingOrder = 5; srRA.sortingOrder = 7;
+        srLG.sortingOrder = 5; srRG.sortingOrder = 7;
+    }
+
+    // Köşe dalışı için ön çömelme
     public void SetCrouch()
     {
+        StopSway();
         root.localRotation = Quaternion.identity;
         Set(tHair,   0f,     0.58f,  0f);
         Set(tHead,   0f,     0.50f,  4f);
@@ -91,7 +126,6 @@ public class GoalkeeperVisual : MonoBehaviour
         Set(tRArm,   0.30f,  0.13f, -65f);
         Set(tLGlove,-0.38f,  0.00f,  0f);
         Set(tRGlove, 0.38f,  0.00f,  0f);
-        // Dizler kırık, bacaklar yana açık
         Set(tLLeg,  -0.16f, -0.18f,  30f);
         Set(tRLeg,   0.16f, -0.18f, -30f);
         Set(tLSock, -0.10f, -0.32f,  30f);
@@ -124,11 +158,15 @@ public class GoalkeeperVisual : MonoBehaviour
         Set(tRBoot,  0.13f, -0.51f,   0f);
         srLA.sortingOrder = 5; srRA.sortingOrder = 7;
         srLG.sortingOrder = 5; srRG.sortingOrder = 7;
+
+        // Hafif sallanma — kaleci canlı görünür
+        if (idleSwayRoutine != null) StopCoroutine(idleSwayRoutine);
+        idleSwayRoutine = StartCoroutine(IdleSway());
     }
 
-    // Yüksek merkez — kollar yukarı uzanmış
     void SetReach()
     {
+        StopSway();
         root.localRotation = Quaternion.identity;
         Set(tHair,   0f,     0.64f,  0f);
         Set(tHead,   0f,     0.55f,  0f);
@@ -151,6 +189,7 @@ public class GoalkeeperVisual : MonoBehaviour
 
     void SetDive(bool right)
     {
+        StopSway();
         float s = right ? 1f : -1f;
         root.localRotation = Quaternion.Euler(0f, 0f, -s * 65f);
 
@@ -181,6 +220,43 @@ public class GoalkeeperVisual : MonoBehaviour
         srRA.sortingOrder = right ? 7 : 5;
         srLG.sortingOrder = right ? 5 : 7;
         srRG.sortingOrder = right ? 7 : 5;
+    }
+
+    // ── Idle sallanma animasyonu ──────────────────────────────────────────────
+
+    void StopSway()
+    {
+        if (idleSwayRoutine != null)
+        {
+            StopCoroutine(idleSwayRoutine);
+            idleSwayRoutine = null;
+        }
+        // Root rotasyonunu sıfırla (sway bıraktığı yerden kalmış olabilir)
+        if (root != null) root.localRotation = Quaternion.identity;
+    }
+
+    IEnumerator IdleSway()
+    {
+        float phase = Random.Range(0f, Mathf.PI * 2f);
+        while (true)
+        {
+            phase += Time.deltaTime * 1.0f; // ~6.3s tam döngü
+            float sw = Mathf.Sin(phase) * 0.011f; // çok hafif
+
+            // Gövde hafifçe sallanır
+            root.localRotation = Quaternion.Euler(0, 0, sw * 450f);
+            Set(tHead,   sw * 0.12f, 0.55f, sw * 200f);
+            Set(tHair,   sw * 0.12f, 0.64f, 0f);
+            Set(tTorso,  sw * 0.06f, 0.22f, sw * 300f);
+            Set(tStripe, sw * 0.06f, 0.22f, sw * 300f);
+            // Kollar ellerle birlikte hafifçe iner-kalkar
+            Set(tLArm,  -0.26f + sw * 0.10f, 0.26f, 38f + sw * 600f);
+            Set(tRArm,   0.26f + sw * 0.10f, 0.26f, -38f + sw * 600f);
+            Set(tLGlove,-0.16f + sw * 0.06f, 0.12f, 0f);
+            Set(tRGlove, 0.16f + sw * 0.06f, 0.12f, 0f);
+
+            yield return null;
+        }
     }
 
     // ── Yardımcılar ───────────────────────────────────────────────────────────

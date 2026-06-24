@@ -91,6 +91,21 @@ public class GoalkeeperController : MonoBehaviour
 
     // ── Diving ─────────────────────────────────────────────────────────────
 
+    // Fake'e yumuşak reaksiyon — tam dalış değil, hafif yana yaslanma
+    public void FakeReact(ShotZone fakeZone)
+    {
+        StopAllCoroutines();
+        // Sadece %22 oranında o yöne kaymak: keskin dalış değil, hafif step
+        Vector3 leanTarget = Vector3.Lerp(IDLE, ZoneToWorld(fakeZone), 0.22f);
+        float leanRot      = ZoneToRotation(fakeZone) * 0.20f;
+        StartCoroutine(Dive(leanTarget, leanRot, 0.22f));
+
+        int horiz = (int)fakeZone % 3; // 0=sol, 1=merkez, 2=sağ
+        if      (horiz == 0) visual?.SetLean(false);
+        else if (horiz == 2) visual?.SetLean(true);
+        else                 visual?.SetCrouch();
+    }
+
     public void DiveTo(ShotZone zone)
     {
         StopAllCoroutines();

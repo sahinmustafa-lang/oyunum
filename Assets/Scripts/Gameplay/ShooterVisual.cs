@@ -19,6 +19,7 @@ public class ShooterVisual : MonoBehaviour
     Transform tRThigh, tRCalf, tRSock, tRBoot;
 
     Coroutine runCo;
+    Coroutine swaCo;
     static Sprite sBox, sDisk, sRound;
 
     void Awake()
@@ -60,7 +61,9 @@ public class ShooterVisual : MonoBehaviour
 
     public void StartRunning()
     {
+        if (swaCo != null) { StopCoroutine(swaCo); swaCo = null; }
         if (runCo != null) StopCoroutine(runCo);
+        root.localRotation = Quaternion.identity;
         runCo = StartCoroutine(RunCycle());
     }
 
@@ -72,7 +75,9 @@ public class ShooterVisual : MonoBehaviour
 
     public void PlayKick()
     {
+        if (swaCo != null) { StopCoroutine(swaCo); swaCo = null; }
         if (runCo != null) { StopCoroutine(runCo); runCo = null; }
+        root.localRotation = Quaternion.identity;
         StartCoroutine(KickRoutine());
     }
 
@@ -84,6 +89,7 @@ public class ShooterVisual : MonoBehaviour
 
     void SetIdle()
     {
+        if (swaCo != null) { StopCoroutine(swaCo); swaCo = null; }
         root.localRotation = Quaternion.identity;
 
         Set(tHair,    0f,     0.65f,  0f);
@@ -99,6 +105,24 @@ public class ShooterVisual : MonoBehaviour
 
         SetLeg(false,  7f, 0f);
         SetLeg(true,  -7f, 0f);
+
+        swaCo = StartCoroutine(IdleSway());
+    }
+
+    IEnumerator IdleSway()
+    {
+        float phase = Random.Range(0f, Mathf.PI * 2f);
+        while (true)
+        {
+            phase += Time.deltaTime * 1.1f;
+            float sw = Mathf.Sin(phase) * 0.009f;
+            root.localRotation = Quaternion.Euler(0, 0, sw * 400f);
+            Set(tHead,   sw * 0.10f, 0.55f, sw * 180f);
+            Set(tHair,   sw * 0.10f, 0.65f, 0f);
+            Set(tTorso,  sw * 0.05f, 0.22f, sw * 250f);
+            Set(tStripe, sw * 0.05f, 0.22f, sw * 250f);
+            yield return null;
+        }
     }
 
     void SetRunFrame(bool rightForward)

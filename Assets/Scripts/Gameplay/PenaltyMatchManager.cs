@@ -145,10 +145,10 @@ public class PenaltyMatchManager : MonoBehaviour
         shooterController.ExecuteOpponentShot(aiShot);
     }
 
-    // Called after player's FIRST tap — keeper dives to fake zone immediately
+    // İlk tap: kaleci fake yönüne hafifçe yaslanır (tam dalış değil)
     public void OnPlayerFakeTap(ShotZone fakeZone)
     {
-        goalkeeperController.DiveTo(fakeZone);
+        goalkeeperController.FakeReact(fakeZone);
     }
 
     public void OnPlayerShotInput(PenaltyShotData shot)
