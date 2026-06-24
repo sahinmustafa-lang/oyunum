@@ -19,6 +19,8 @@ public class GoalkeeperVisual : MonoBehaviour
     SpriteRenderer srLA, srRA, srLG, srRG;
 
     Coroutine idleSwayRoutine;
+    Coroutine recovCo;
+    bool      lastDiveRight;
 
     static Sprite sBox, sDisk, sRound;
 
@@ -112,6 +114,71 @@ public class GoalkeeperVisual : MonoBehaviour
         srLG.sortingOrder = 5; srRG.sortingOrder = 7;
     }
 
+    // Yan dalış sonrası doğal yere düşme + kalkma animasyonu
+    public void TriggerLanding(bool right)
+    {
+        if (recovCo != null) StopCoroutine(recovCo);
+        recovCo = StartCoroutine(LandingRoutine(right));
+    }
+
+    IEnumerator LandingRoutine(bool right)
+    {
+        StopSway();
+        float s = right ? 1f : -1f;
+
+        // Aşama 1 — yere düşme: rotasyon ±65° → ±20°, kollar içe gelir (0.40s)
+        Quaternion fromRot = root.localRotation;
+        Quaternion midRot  = Quaternion.Euler(0, 0, -s * 20f);
+        SetRecovering(right);   // kollar/bacaklar kalkış pozisyonuna geçer
+
+        float dur = 0.40f, t = 0f;
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+            root.localRotation = Quaternion.Lerp(fromRot, midRot, Mathf.SmoothStep(0, 1, t / dur));
+            yield return null;
+        }
+        root.localRotation = midRot;
+
+        // Aşama 2 — kalkma: rotasyon ±20° → 0° (0.50s)
+        fromRot = root.localRotation;
+        dur = 0.50f; t = 0f;
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+            root.localRotation = Quaternion.Lerp(fromRot, Quaternion.identity, Mathf.SmoothStep(0, 1, t / dur));
+            yield return null;
+        }
+
+        SetIdle();
+    }
+
+    // Kalkmaya hazırlık pozu — dalış ile idle arası
+    void SetRecovering(bool right)
+    {
+        float s = right ? 1f : -1f;
+        // Root rotasyonu LandingRoutine tarafından kontrol edilir
+        Set(tHair,   0f,     0.64f,  0f);
+        Set(tHead,   0f,     0.55f,  0f);
+        Set(tTorso,  0f,     0.22f,  0f);
+        Set(tStripe, 0f,     0.22f,  0f);
+        Set(tShorts, 0f,    -0.04f,  0f);
+        Set(tLArm,  -0.28f,  0.26f,  44f);
+        Set(tRArm,   0.28f,  0.26f, -44f);
+        Set(tLGlove,-0.22f,  0.12f,  0f);
+        Set(tRGlove, 0.22f,  0.12f,  0f);
+        Set(tLLeg,  -0.11f, -0.26f,   8f);
+        Set(tRLeg,   0.11f, -0.26f,  -8f);
+        Set(tLSock, -0.11f, -0.42f,   8f);
+        Set(tRSock,  0.11f, -0.42f,  -8f);
+        Set(tLBoot, -0.13f, -0.51f,   0f);
+        Set(tRBoot,  0.13f, -0.51f,   0f);
+        srLA.sortingOrder = right ? 5 : 7;
+        srRA.sortingOrder = right ? 7 : 5;
+        srLG.sortingOrder = right ? 5 : 7;
+        srRG.sortingOrder = right ? 7 : 5;
+    }
+
     // Köşe dalışı için ön çömelme
     public void SetCrouch()
     {
@@ -189,6 +256,7 @@ public class GoalkeeperVisual : MonoBehaviour
 
     void SetDive(bool right)
     {
+        lastDiveRight = right;
         StopSway();
         float s = right ? 1f : -1f;
         root.localRotation = Quaternion.Euler(0f, 0f, -s * 65f);

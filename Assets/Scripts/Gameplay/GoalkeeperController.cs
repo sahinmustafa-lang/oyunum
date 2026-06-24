@@ -18,6 +18,7 @@ public class GoalkeeperController : MonoBehaviour
     private bool     waitingForClick = false;
     private bool     trackingMouse   = false;
     private ShotZone playerZone      = ShotZone.MidCenter;
+    private ShotZone lastDiveZone    = ShotZone.MidCenter;
 
     private GameObject      cursorGO;
     private GoalkeeperVisual visual;
@@ -94,6 +95,7 @@ public class GoalkeeperController : MonoBehaviour
     // Fake'e yumuşak reaksiyon — tam dalış değil, hafif yana yaslanma
     public void FakeReact(ShotZone fakeZone)
     {
+        lastDiveZone = fakeZone;
         StopAllCoroutines();
         // Sadece %22 oranında o yöne kaymak: keskin dalış değil, hafif step
         Vector3 leanTarget = Vector3.Lerp(IDLE, ZoneToWorld(fakeZone), 0.22f);
@@ -108,6 +110,7 @@ public class GoalkeeperController : MonoBehaviour
 
     public void DiveTo(ShotZone zone)
     {
+        lastDiveZone = zone;
         StopAllCoroutines();
 
         bool isCorner = zone == ShotZone.LowLeft  || zone == ShotZone.LowRight ||
@@ -133,6 +136,7 @@ public class GoalkeeperController : MonoBehaviour
 
     public void QuickDiveTo(ShotZone zone)
     {
+        lastDiveZone = zone;
         StopAllCoroutines();
         StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.13f));
         visual?.DiveToZone(zone);
@@ -171,20 +175,51 @@ public class GoalkeeperController : MonoBehaviour
     {
         if (delay > 0f) yield return new WaitForSeconds(delay);
 
-        visual?.ReturnToIdle();
+        Vector3 startPos = transform.position;
+        bool isSideDive  = (int)lastDiveZone % 3 != 1; // sol veya sağ kolondaysa
 
-        Vector3    startPos = transform.position;
-        Quaternion startRot = transform.rotation;
-        float dur = 0.45f, t = 0f;
-
-        while (t < dur)
+        if (visual != null && isSideDive)
         {
-            t += Time.deltaTime;
-            float p = Mathf.SmoothStep(0f, 1f, t / dur);
-            transform.position = Vector3.Lerp(startPos, IDLE, p);
-            transform.rotation = Quaternion.Lerp(startRot, Quaternion.identity, p);
-            yield return null;
+            // Görsel: doğal düşme + kalkma animasyonu (GoalkeeperVisual'da çalışır)
+            bool right = (int)lastDiveZone % 3 == 2;
+            visual.TriggerLanding(right);
+
+            // Aşama 1 — yavaşça merkeze kayma (0.40s, konumun %38'i)
+            Vector3 midPos = Vector3.Lerp(startPos, IDLE, 0.38f);
+            float dur = 0.40f, t = 0f;
+            while (t < dur)
+            {
+                t += Time.deltaTime;
+                transform.position = Vector3.Lerp(startPos, midPos, Mathf.SmoothStep(0f, 1f, t / dur));
+                yield return null;
+            }
+
+            // Aşama 2 — tam idle pozisyonuna dönme (0.50s)
+            startPos = transform.position;
+            dur = 0.50f; t = 0f;
+            while (t < dur)
+            {
+                t += Time.deltaTime;
+                transform.position = Vector3.Lerp(startPos, IDLE, Mathf.SmoothStep(0f, 1f, t / dur));
+                yield return null;
+            }
         }
+        else
+        {
+            // Merkez dalışları: anında görsel sıfırla, pozisyon lerp
+            visual?.ReturnToIdle();
+            Quaternion startRot = transform.rotation;
+            float dur = 0.45f, t = 0f;
+            while (t < dur)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.SmoothStep(0f, 1f, t / dur);
+                transform.position = Vector3.Lerp(startPos, IDLE, p);
+                transform.rotation = Quaternion.Lerp(startRot, Quaternion.identity, p);
+                yield return null;
+            }
+        }
+
         transform.position = IDLE;
         transform.rotation = Quaternion.identity;
     }
