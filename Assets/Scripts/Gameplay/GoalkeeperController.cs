@@ -8,12 +8,11 @@ public class GoalkeeperController : MonoBehaviour
 {
     public static GoalkeeperController Instance { get; private set; }
 
-    // Kale çizgisi y=0.88; kalecinin gövde merkezi kale çizgisinde
-    static readonly Vector3 IDLE = new Vector3(0f, 0.88f, 0f);
+    // Root y=1.43 → scale 1.28 × leg-bottom -0.43 = -0.55 → feet at y=0.88 (goal line)
+    static readonly Vector3 IDLE = new Vector3(0f, 1.43f, 0f);
 
-    // Fotoğraftaki kale: direkler ±3.6, kiriş y=2.52
     const float X_MIN = -3.0f, X_MAX = 3.0f;
-    const float Y_MIN =  0.70f, Y_MAX = 2.30f;
+    const float Y_MIN =  0.88f, Y_MAX = 2.30f;
 
     private bool     isPlayerKeeper  = false;
     private bool     waitingForClick = false;
@@ -162,24 +161,23 @@ public class GoalkeeperController : MonoBehaviour
     public void SetPlayerKeeperZone(ShotZone z) => playerZone = z;
     public ShotZone GetPlayerKeeperZone()        => playerZone;
 
-    // Top Save olunca kalecinin gerçek pozisyonuna gitmesi için dışarıya aç
-    public static Vector3 GetDiveTarget(ShotZone zone) => ZoneToWorld(zone);
+    // Top kalecinin gövde merkezine gider (root + torso_local×scale = +0.26)
+    public static Vector3 GetDiveTarget(ShotZone zone) =>
+        ZoneToWorld(zone) + new Vector3(0f, 0.26f, 0f);
 
     static Vector3 ZoneToWorld(ShotZone zone)
     {
-        // Root pozisyonu + 65° dönüş ≈ 0.55 birim ek uzanma.
-        // Direk x=±3.6 → root max ±2.8 → toplam ≈ ±3.35, kale içinde kalır.
         switch (zone)
         {
-            case ShotZone.LowLeft:    return new Vector3(-1.8f, 0.80f, 0f);
-            case ShotZone.MidLeft:    return new Vector3(-2.1f, 0.88f, 0f);
-            case ShotZone.HighLeft:   return new Vector3(-1.8f, 1.85f, 0f);
-            case ShotZone.LowCenter:  return new Vector3( 0.0f, 0.80f, 0f);
+            case ShotZone.LowLeft:    return new Vector3(-1.8f, 0.95f, 0f);
+            case ShotZone.MidLeft:    return new Vector3(-2.2f, 1.43f, 0f);
+            case ShotZone.HighLeft:   return new Vector3(-1.8f, 1.90f, 0f);
+            case ShotZone.LowCenter:  return new Vector3( 0.0f, 0.95f, 0f);
             case ShotZone.MidCenter:  return IDLE;
-            case ShotZone.HighCenter: return new Vector3( 0.0f, 1.90f, 0f);
-            case ShotZone.LowRight:   return new Vector3( 1.8f, 0.80f, 0f);
-            case ShotZone.MidRight:   return new Vector3( 2.1f, 0.88f, 0f);
-            case ShotZone.HighRight:  return new Vector3( 1.8f, 1.85f, 0f);
+            case ShotZone.HighCenter: return new Vector3( 0.0f, 2.00f, 0f);
+            case ShotZone.LowRight:   return new Vector3( 1.8f, 0.95f, 0f);
+            case ShotZone.MidRight:   return new Vector3( 2.2f, 1.43f, 0f);
+            case ShotZone.HighRight:  return new Vector3( 1.8f, 1.90f, 0f);
             default:                  return IDLE;
         }
     }
