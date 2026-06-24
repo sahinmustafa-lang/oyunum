@@ -22,6 +22,10 @@ public class BallController : MonoBehaviour
         if (missTarget    == null) missTarget     = FindT("MissTarget");
 
         BuildShadow();
+
+        // Başlangıçta top yerde — gölgeyi hemen görünür yap
+        Vector3 spot = penaltySpot != null ? penaltySpot.position : DEFAULT_SPOT;
+        UpdateShadow(spot.x, spot.y, DEFAULT_SPOT.y);
     }
 
     void BuildShadow()
@@ -31,11 +35,11 @@ public class BallController : MonoBehaviour
         shadowRenderer  = go.AddComponent<SpriteRenderer>();
         shadowRenderer.sprite       = MakeShadowSprite();
         shadowRenderer.sortingOrder = 2;   // topun (3) hemen altında
-        shadowRenderer.color        = new Color(0f, 0f, 0f, 0f);
+        shadowRenderer.color        = new Color(0f, 0f, 0f, 0.50f);
 
         Vector3 spot = penaltySpot != null ? penaltySpot.position : DEFAULT_SPOT;
         shadowTransform.position   = new Vector3(spot.x, spot.y - 0.04f, 0f);
-        shadowTransform.localScale = new Vector3(0.42f, 0.12f, 1f);
+        shadowTransform.localScale = new Vector3(0.44f, 0.12f, 1f);
     }
 
     static Sprite MakeShadowSprite()
