@@ -120,17 +120,17 @@ public class GoalkeeperController : MonoBehaviour
             StartCoroutine(CornerDive(zone, 0.28f));
         else
         {
-            StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.28f));
+            StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.28f, ZoneArc(zone)));
             visual?.DiveToZone(zone);
         }
     }
 
-    // Köşe dalışı: önce dizleri kır (0.13s), sonra kollar açık tam dalış
+    // Köşe dalışı: önce dizleri kır (0.13s), sonra parabolik tam dalış
     IEnumerator CornerDive(ShotZone zone, float dur)
     {
         visual?.SetCrouch();
         yield return new WaitForSeconds(0.13f);
-        StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), dur));
+        StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), dur, ZoneArc(zone)));
         visual?.DiveToZone(zone);
     }
 
@@ -138,13 +138,12 @@ public class GoalkeeperController : MonoBehaviour
     {
         lastDiveZone = zone;
         StopAllCoroutines();
-        StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.13f));
+        StartCoroutine(Dive(ZoneToWorld(zone), ZoneToRotation(zone), 0.13f, ZoneArc(zone) * 0.4f));
         visual?.DiveToZone(zone);
     }
 
-    // Smooth dive to target. Sprite visual kendi poz animasyonunu içerdiğinden
-    // GoalkeeperVisual varken GO'yu döndürmüyoruz — sadece pozisyon değişir.
-    IEnumerator Dive(Vector3 targetPos, float targetZ, float dur)
+    // Parabolik dalış — arc > 0 ise sin eğrisi ile yukarı yay ekler
+    IEnumerator Dive(Vector3 targetPos, float targetZ, float dur, float arc = 0f)
     {
         Vector3    startPos = transform.position;
         Quaternion startRot = transform.rotation;
@@ -156,13 +155,31 @@ public class GoalkeeperController : MonoBehaviour
         while (t < dur)
         {
             t += Time.deltaTime;
-            float p = Mathf.SmoothStep(0f, 1f, t / dur);
-            transform.position = Vector3.Lerp(startPos, targetPos, p);
-            transform.rotation = Quaternion.Lerp(startRot, endRot, p);
+            float p  = Mathf.Clamp01(t / dur);
+            float sp = Mathf.SmoothStep(0f, 1f, p);
+            Vector3 pos = Vector3.Lerp(startPos, targetPos, sp);
+            if (arc > 0f)
+                pos.y += Mathf.Sin(p * Mathf.PI) * arc; // yay: zirve ortada
+            transform.position = pos;
+            transform.rotation = Quaternion.Lerp(startRot, endRot, sp);
             yield return null;
         }
         transform.position = targetPos;
         transform.rotation = endRot;
+    }
+
+    // Her zone için uygun yay yüksekliği (birim)
+    static float ZoneArc(ShotZone zone)
+    {
+        switch (zone)
+        {
+            case ShotZone.HighLeft:
+            case ShotZone.HighRight:  return 0.45f;
+            case ShotZone.HighCenter: return 0.38f;
+            case ShotZone.MidLeft:
+            case ShotZone.MidRight:   return 0.18f;
+            default:                  return 0f;
+        }
     }
 
     // Called by PenaltyMatchManager after the ball animation is done
@@ -178,23 +195,34 @@ public class GoalkeeperController : MonoBehaviour
         Vector3 startPos = transform.position;
         bool isSideDive  = (int)lastDiveZone % 3 != 1; // sol veya sağ kolondaysa
 
+        bool isHighDive = lastDiveZone == ShotZone.HighLeft  ||
+                          lastDiveZone == ShotZone.HighRight ||
+                          lastDiveZone == ShotZone.HighCenter;
+
         if (visual != null && isSideDive)
         {
-            // Görsel: doğal düşme + kalkma animasyonu (GoalkeeperVisual'da çalışır)
             bool right = (int)lastDiveZone % 3 == 2;
             visual.TriggerLanding(right);
 
-            // Aşama 1 — yavaşça merkeze kayma (0.40s, konumun %38'i)
-            Vector3 midPos = Vector3.Lerp(startPos, IDLE, 0.38f);
+            // Aşama 1 — yere düşme (0.40s)
+            // Yüksek dalışlarda y ekseni yerçekimi eğrisiyle (t²) hızlanarak düşer
+            // Yatay dalışlarda her iki eksen de smooth
+            Vector3 groundPos = new Vector3(startPos.x * 0.35f, IDLE.y, 0f);
             float dur = 0.40f, t = 0f;
             while (t < dur)
             {
                 t += Time.deltaTime;
-                transform.position = Vector3.Lerp(startPos, midPos, Mathf.SmoothStep(0f, 1f, t / dur));
+                float p  = Mathf.Clamp01(t / dur);
+                float px = Mathf.SmoothStep(0f, 1f, p);
+                float py = isHighDive ? p * p : px; // yüksek: t² (yerçekimi), yatay: smooth
+                transform.position = new Vector3(
+                    Mathf.Lerp(startPos.x, groundPos.x, px),
+                    Mathf.Lerp(startPos.y, groundPos.y, py),
+                    0f);
                 yield return null;
             }
 
-            // Aşama 2 — tam idle pozisyonuna dönme (0.50s)
+            // Aşama 2 — IDLE'a yerleşme (0.50s)
             startPos = transform.position;
             dur = 0.50f; t = 0f;
             while (t < dur)
