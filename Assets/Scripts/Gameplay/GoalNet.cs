@@ -43,11 +43,11 @@ public class GoalNet : MonoBehaviour
         netRenderer = go.AddComponent<SpriteRenderer>();
         netRenderer.sprite = sprite;
 
-        // field_bg ile aynı boyut ve konuma yerleştir
+        // Kırpılmış net: sadece kale iç alanı (Python'dan gelen Unity koordinatları)
         float natW = tex.width  / 100f;
         float natH = tex.height / 100f;
-        float w = 20f, h = 8.22f, y = -0.89f;
-        go.transform.position   = new Vector3(0, y, 0);
+        float w = 8.154f, h = 2.216f, y = 1.605f;
+        go.transform.position   = new Vector3(0.007f, y, 0);
         go.transform.localScale = new Vector3(w / natW, h / natH, 1f);
 
         // NetWave shader'ını ata
