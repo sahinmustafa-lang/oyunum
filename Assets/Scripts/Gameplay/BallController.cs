@@ -127,7 +127,10 @@ public class BallController : MonoBehaviour
 
     static Vector3 GetSaveBounce(Vector3 savePos)
     {
-        float side = savePos.x >= 0 ? 1f : -1f;
+        // Merkeze yakın savelerde yön rastgele, kenarlarda ise dışarı doğru seker
+        float side = savePos.x > 0.25f ? 1f
+                   : savePos.x < -0.25f ? -1f
+                   : (Random.value > 0.5f ? 1f : -1f);
         return new Vector3(
             savePos.x + side * Random.Range(0.3f, 0.8f),
             Mathf.Max(-1.0f, savePos.y - Random.Range(1.0f, 1.8f)), 0f);

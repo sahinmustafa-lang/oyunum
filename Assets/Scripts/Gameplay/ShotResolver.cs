@@ -46,9 +46,9 @@ public static class ShotResolver
                 saveChance = 0.80f + (keeperStrength / 100f) * 0.18f; // 80-98% — gövde
         }
         else if (IsAdjacent(keeperZone, shot.targetZone))
-            saveChance = 0.28f + (keeperStrength / 100f) * 0.10f;   // yakın: 28-38%
+            saveChance = 0.06f + (keeperStrength / 100f) * 0.05f;   // komşu ama yanlış yön: 6-11%
         else
-            saveChance = 0.05f;                                       // yanlış taraf: 5%
+            saveChance = 0.02f;                                       // tamamen yanlış taraf: 2%
 
         if (Random.value < saveChance)
             return ShotOutcome.Save;
@@ -58,7 +58,13 @@ public static class ShotResolver
 
     static bool IsAdjacent(ShotZone a, ShotZone b)
     {
-        int diff = Mathf.Abs((int)a - (int)b);
-        return diff == 1 || diff == 3;
+        int ai = (int)a, bi = (int)b;
+        int diff = Mathf.Abs(ai - bi);
+        // Dikey komşu: aynı sütun, bir satır fark (diff=3)
+        if (diff == 3) return true;
+        // Yatay komşu: aynı satır, bir sütun fark (diff=1) — ama satır sarması yasak
+        // Satır sonu: indeks % 3 == 2 (LowRight=2, MidRight=5, HighRight=8)
+        if (diff == 1 && Mathf.Min(ai, bi) % 3 != 2) return true;
+        return false;
     }
 }

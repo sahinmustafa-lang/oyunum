@@ -8,8 +8,8 @@ public class GoalkeeperController : MonoBehaviour
 {
     public static GoalkeeperController Instance { get; private set; }
 
-    // Root y=1.43 → scale 1.28 × leg-bottom -0.43 = -0.55 → feet at y=0.88 (goal line)
-    static readonly Vector3 IDLE = new Vector3(0f, 1.43f, 0f);
+    // Root y=1.60 → scale 1.28 × boot-center -0.51 = -0.653 → boot base ≈ y=0.88 (goal line)
+    static readonly Vector3 IDLE = new Vector3(0f, 1.60f, 0f);
 
     const float X_MIN = -3.0f, X_MAX = 3.0f;
     const float Y_MIN =  0.88f, Y_MAX = 2.30f;
