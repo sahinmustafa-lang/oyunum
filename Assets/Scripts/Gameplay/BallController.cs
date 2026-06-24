@@ -33,9 +33,10 @@ public class BallController : MonoBehaviour
         var go = new GameObject("BallShadow");
         shadowTransform = go.transform;
         shadowRenderer  = go.AddComponent<SpriteRenderer>();
-        shadowRenderer.sprite       = MakeShadowSprite();
-        shadowRenderer.sortingOrder = 2;   // topun (3) hemen altında
-        shadowRenderer.color        = new Color(0f, 0f, 0f, 0.50f);
+        shadowRenderer.sprite            = MakeShadowSprite();
+        shadowRenderer.sortingLayerName  = "Default";
+        shadowRenderer.sortingOrder      = 20;  // her şeyin önüne çek — görünürlük testi
+        shadowRenderer.color             = new Color(0f, 0f, 0f, 0.60f);
 
         Vector3 spot = penaltySpot != null ? penaltySpot.position : DEFAULT_SPOT;
         shadowTransform.position   = new Vector3(spot.x, spot.y - 0.04f, 0f);
@@ -87,6 +88,21 @@ public class BallController : MonoBehaviour
             yield return MoveBall(b1, b2, 0.15f, arcAmount: 0.02f, spin: 0.2f);
 
             yield return new WaitForSeconds(0.55f);
+        }
+        else if (outcome == ShotOutcome.Post)
+        {
+            // Direğe/kirişe çarpma: sert sekiş, karşı yöne fırlar
+            float hitX   = target.x;
+            float bounceX = hitX > 0 ? hitX - Random.Range(1.5f, 2.8f)   // sağ direk → sola
+                                     : hitX < 0 ? hitX + Random.Range(1.5f, 2.8f)  // sol direk → sağa
+                                     : Random.Range(-1.5f, 1.5f);         // kiriş → rastgele yana
+            float bounceY = target.y > 2.0f
+                ? target.y - Random.Range(1.2f, 2.0f)   // kirişten aşağı sekiş
+                : target.y - Random.Range(0.5f, 1.2f);  // direkten aşağı-dışa sekiş
+            bounceY = Mathf.Max(bounceY, -0.5f);
+
+            yield return MoveBall(target, new Vector3(bounceX, bounceY, 0f), 0.24f, arcAmount: 0.05f, spin: 1.4f);
+            yield return new WaitForSeconds(0.3f);
         }
         else if (outcome == ShotOutcome.Save)
         {
@@ -177,6 +193,14 @@ public class BallController : MonoBehaviour
             float by = 3.8f + Random.Range(0f, 0.5f);
             bx += Random.Range(-0.25f, 0.25f);
             return new Vector3(bx, by, 0f);
+        }
+        if (outcome == ShotOutcome.Post)
+        {
+            // Hangi direğe/kirişe çarpacağını zone'dan belirle
+            int col = ZoneColumn(zone);
+            if (col == 0) return new Vector3(-3.55f, Random.Range(1.2f, 2.4f), 0f); // sol direk
+            if (col == 2) return new Vector3( 3.55f, Random.Range(1.2f, 2.4f), 0f); // sağ direk
+            return new Vector3(Random.Range(-1.5f, 1.5f), 2.50f, 0f);               // kiriş
         }
         Vector3 zonePos = GoalIndicator.GetZonePosition(zone);
         return zonePos + new Vector3(Random.Range(-0.10f, 0.10f), Random.Range(-0.05f, 0.05f), 0f);
